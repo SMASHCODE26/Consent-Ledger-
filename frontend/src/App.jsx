@@ -345,7 +345,7 @@ function AuditPage() {
                   {new Date(l.created_at).toLocaleString("en-IN", {
                     timeZone: "Asia/Kolkata"
                   })}{" "}
-                  (IST)
+                  (UTC)
                 </td>
                 <td className="border p-2 text-xs break-all text-gray-600">
                   {l.log_hash?.slice(0, 14)}…
