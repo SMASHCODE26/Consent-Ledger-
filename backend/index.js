@@ -1,6 +1,6 @@
 // Backend trust boundary
 // All consent enforcement must happen here
-
+import appAuth from "./middleware/appAuth.js";
 
 import express from 'express'
 import cors from 'cors'
@@ -66,8 +66,9 @@ app.post('/consent', async (req, res) => {
   }
 })
 
-app.post('/data-access', async (req, res) => {
-  const { user_id, app_id, data_type, purpose } = req.body
+app.post('/data-access',appAuth, async (req, res) => {
+  const { user_id, data_type, purpose } = req.body;
+  const app_id = req.app.app_id;
 
   if (!user_id || !app_id || !data_type || !purpose) {
     return res.status(400).json({ error: 'Missing required fields' })
