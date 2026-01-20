@@ -122,7 +122,7 @@ function ConsentPage() {
   return (
     <section className="space-y-4">
       <h2 className="text-xl font-semibold text-indigo-700">
-        Grant User Consent
+        Grant User Consents
       </h2>
 
       <form onSubmit={submitConsent} className="grid gap-3">
@@ -133,7 +133,7 @@ function ConsentPage() {
         <Input type="date" name="expires_at" value={form.expires_at} onChange={handleChange} />
 
         <button className="bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700">
-          Grant Consent
+          Grant Consents
         </button>
       </form>
 
