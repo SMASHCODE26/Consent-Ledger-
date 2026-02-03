@@ -7,14 +7,11 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-/**
- * Simulate data access request
- * This is what a real app backend would do
- */
-app.get("/ping", (req, res) => {
-  console.log("🏓 PING HIT");
-  res.json({ ok: true });
-});
+
+// app.get("/ping", (req, res) => {
+//   console.log("🏓 PING HIT");
+//   res.json({ ok: true });
+// });
 
 // app.post("/use-user-data", async (req, res) => {
 //   console.log("🚀 Third-party route HIT");
@@ -59,8 +56,10 @@ app.get("/ping", (req, res) => {
 //   }
 // });
 app.post("/use-user-data", async (req, res) => {
-  console.log("🚀 Third-party route HIT");
-  console.log("Request body:", req.body);
+  // console.log("🚀 Third-party route HIT");
+  // console.log("Request body:", req.body);
+  console.log("Third-party app: requesting consent check");
+
 
   const { user_id, data_type, purpose } = req.body;
 

@@ -67,10 +67,10 @@ app.post("/consent", async (req, res) => {
 });
 
 
-app.post("/_debug", (req, res) => {
-  console.log("🔥 DEBUG ROUTE HIT");
-  res.json({ ok: true });
-});
+// app.post("/_debug", (req, res) => {
+//   console.log("🔥 DEBUG ROUTE HIT");
+//   res.json({ ok: true });
+// });
 
 /* ---------------- DATA ACCESS (REAL ENFORCEMENT) ---------------- */
 
