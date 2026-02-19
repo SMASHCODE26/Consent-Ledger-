@@ -3,26 +3,23 @@
 
 // algopy.arc4.ARC4Contract.approval_program() -> uint64:
 main:
+    intcblock 1 0 2
+    bytecblock "consent_active"
     // smart_contracts/algoconsent/contract.py:5
     // class AlgoConsent(ARC4Contract):
     txn NumAppArgs
-    bz main___algopy_default_create@5
-    pushbytes 0x02bece11 // method "hello(string)string"
-    txna ApplicationArgs 0
-    match main_hello_route@3
-    err
-
-main_hello_route@3:
-    // smart_contracts/algoconsent/contract.py:7
-    // @abimethod()
+    bz main___algopy_default_create@11
     txn OnCompletion
     !
-    txn ApplicationID
-    &&
     assert
-    b hello
+    txn ApplicationID
+    assert
+    pushbytess 0x9fb04a12 0x64b95f7d 0x41b51089 0xfa568e30 // method "create_consent(string)string", method "revoke_consent()string", method "anchor_audit_hash(string)string", method "get_consent_status()uint64"
+    txna ApplicationArgs 0
+    match create_consent revoke_consent anchor_audit_hash get_consent_status
+    err
 
-main___algopy_default_create@5:
+main___algopy_default_create@11:
     txn OnCompletion
     !
     txn ApplicationID
@@ -31,37 +28,96 @@ main___algopy_default_create@5:
     return
 
 
-// smart_contracts.algoconsent.contract.AlgoConsent.hello[routing]() -> void:
-hello:
-    // smart_contracts/algoconsent/contract.py:7
+// smart_contracts.algoconsent.contract.AlgoConsent.create_consent[routing]() -> void:
+create_consent:
+    // smart_contracts/algoconsent/contract.py:11
     // @abimethod()
     txna ApplicationArgs 1
     dup
-    pushint 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 2
+    intc_2 // 2
     +
     dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    // smart_contracts/algoconsent/contract.py:9
-    // return "Hello, " + name
-    pushbytes "Hello, "
+    // smart_contracts/algoconsent/contract.py:13
+    // self.consent_hash = consent_hash
+    pushbytes "consent_hash"
     swap
-    concat
-    // smart_contracts/algoconsent/contract.py:7
+    app_global_put
+    // smart_contracts/algoconsent/contract.py:14
+    // self.consent_active = UInt64(1)
+    bytec_0 // "consent_active"
+    intc_0 // 1
+    app_global_put
+    // smart_contracts/algoconsent/contract.py:11
     // @abimethod()
+    pushbytes 0x151f7c75000f436f6e73656e742063726561746564
+    log
+    intc_0 // 1
+    return
+
+
+// smart_contracts.algoconsent.contract.AlgoConsent.revoke_consent[routing]() -> void:
+revoke_consent:
+    // smart_contracts/algoconsent/contract.py:19
+    // self.consent_active = UInt64(0)
+    bytec_0 // "consent_active"
+    intc_1 // 0
+    app_global_put
+    // smart_contracts/algoconsent/contract.py:17
+    // @abimethod()
+    pushbytes 0x151f7c75000f436f6e73656e74207265766f6b6564
+    log
+    intc_0 // 1
+    return
+
+
+// smart_contracts.algoconsent.contract.AlgoConsent.anchor_audit_hash[routing]() -> void:
+anchor_audit_hash:
+    // smart_contracts/algoconsent/contract.py:22
+    // @abimethod()
+    txna ApplicationArgs 1
     dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
     len
-    itob
-    extract 6 2
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    // smart_contracts/algoconsent/contract.py:24
+    // self.audit_anchor = audit_hash
+    pushbytes "audit_anchor"
     swap
-    concat
+    app_global_put
+    // smart_contracts/algoconsent/contract.py:22
+    // @abimethod()
+    pushbytes 0x151f7c7500134175646974206861736820616e63686f726564
+    log
+    intc_0 // 1
+    return
+
+
+// smart_contracts.algoconsent.contract.AlgoConsent.get_consent_status[routing]() -> void:
+get_consent_status:
+    // smart_contracts/algoconsent/contract.py:29
+    // return self.consent_active
+    intc_1 // 0
+    bytec_0 // "consent_active"
+    app_global_get_ex
+    assert // check self.consent_active exists
+    // smart_contracts/algoconsent/contract.py:27
+    // @abimethod()
+    itob
     pushbytes 0x151f7c75
     swap
     concat
     log
-    pushint 1
+    intc_0 // 1
     return

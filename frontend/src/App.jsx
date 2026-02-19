@@ -1,4 +1,7 @@
 import { useState } from "react";
+import algosdk from "algosdk";
+import PeraWalletConnect from "@perawallet/connect";
+import { Buffer } from "buffer";
 import {
   BarChart,
   Bar,
@@ -8,10 +11,50 @@ import {
   ResponsiveContainer
 } from "recharts";
 
+/* ================= BLOCKCHAIN CONFIG ================= */
+
+const peraWallet = new PeraWalletConnect();
+
+const appId = 755774056;
+
+const algodClient = new algosdk.Algodv2(
+  "",
+  "https://testnet-api.algonode.cloud",
+  ""
+);
+
 /* ================= APP ROOT ================= */
 
 function App() {
   const [page, setPage] = useState("consent");
+  const [wallet, setWallet] = useState(null);
+
+  const connectWallet = async () => {
+    const accounts = await peraWallet.connect();
+    setWallet(accounts[0]);
+  };
+
+  const callContract = async (method, args = []) => {
+    if (!wallet) return alert("Connect wallet first");
+
+    const suggestedParams = await algodClient.getTransactionParams().do();
+
+    const txn = algosdk.makeApplicationNoOpTxnFromObject({
+      from: wallet,
+      appIndex: appId,
+      suggestedParams,
+      appArgs: [
+        new Uint8Array(Buffer.from(method)),
+        ...args.map((a) => new Uint8Array(Buffer.from(a)))
+      ],
+    });
+
+    const signedTxn = await peraWallet.signTransaction([
+      { txn, signers: [wallet] },
+    ]);
+
+    await algodClient.sendRawTransaction(signedTxn).do();
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
@@ -19,11 +62,23 @@ function App() {
         <h1 className="text-3xl font-bold text-indigo-700 mb-1">
           ConsentLedger
         </h1>
-        <p className="text-gray-600 mb-6">
+        <p className="text-gray-600 mb-4">
           Decentralized Consent & Data Usage Tracker
         </p>
 
-        {/* NAVIGATION */}
+        {wallet ? (
+          <p className="text-green-600 text-sm mb-4">
+            Connected: {wallet.slice(0, 6)}...
+          </p>
+        ) : (
+          <button
+            onClick={connectWallet}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-lg mb-4"
+          >
+            Connect Wallet
+          </button>
+        )}
+
         <div className="flex gap-3 mb-8">
           <NavButton active={page === "consent"} onClick={() => setPage("consent")}>
             Consent
@@ -36,9 +91,9 @@ function App() {
           </NavButton>
         </div>
 
-        {page === "consent" && <ConsentPage />}
+        {page === "consent" && <ConsentPage callContract={callContract} />}
         {page === "access" && <AccessPage />}
-        {page === "audit" && <AuditPage />}
+        {page === "audit" && <AuditPage callContract={callContract} />}
       </div>
     </div>
   );
@@ -72,7 +127,7 @@ function Input(props) {
 
 /* ================= CONSENT PAGE ================= */
 
-function ConsentPage() {
+function ConsentPage({ callContract }) {
   const [form, setForm] = useState({
     user_id: "",
     app_id: "",
@@ -106,14 +161,9 @@ function ConsentPage() {
         return;
       }
 
-      setMessage("Consent granted successfully");
-      setForm({
-        user_id: "",
-        app_id: "",
-        data_type: "",
-        purpose: "",
-        expires_at: ""
-      });
+      await callContract("create_consent", ["demo_hash"]);
+
+      setMessage("Consent granted & anchored on-chain");
     } catch {
       setError("Backend not reachable");
     }
@@ -128,7 +178,7 @@ function ConsentPage() {
       <form onSubmit={submitConsent} className="grid gap-3">
         <Input name="user_id" placeholder="User ID" value={form.user_id} onChange={handleChange} required />
         <Input name="app_id" placeholder="App ID" value={form.app_id} onChange={handleChange} required />
-        <Input name="data_type" placeholder="Data Type (email, phone)" value={form.data_type} onChange={handleChange} required />
+        <Input name="data_type" placeholder="Data Type" value={form.data_type} onChange={handleChange} required />
         <Input name="purpose" placeholder="Purpose" value={form.purpose} onChange={handleChange} required />
         <Input type="date" name="expires_at" value={form.expires_at} onChange={handleChange} />
 
@@ -143,218 +193,53 @@ function ConsentPage() {
   );
 }
 
-/* ================= APP ACCESS PAGE ================= */
+/* ================= ACCESS PAGE ================= */
 
 function AccessPage() {
-  const [form, setForm] = useState({
-    user_id: "",
-    app_id: "",
-    data_type: "",
-    purpose: ""
-  });
-
-  const [result, setResult] = useState(null);
-
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
-
-  const requestAccess = async (e) => {
-    e.preventDefault();
-    setResult(null);
-
-    const res = await fetch("http://localhost:4000/data-access", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form)
-    });
-
-    const data = await res.json();
-    setResult(data);
-  };
-
   return (
-    <section className="space-y-4">
+    <section>
       <h2 className="text-xl font-semibold text-indigo-700">
-        Simulated App Data Request
+        App Access (Backend Controlled)
       </h2>
-
-      <form onSubmit={requestAccess} className="grid gap-3">
-        <Input name="user_id" placeholder="User ID" value={form.user_id} onChange={handleChange} required />
-        <Input name="app_id" placeholder="App ID" value={form.app_id} onChange={handleChange} required />
-        <Input name="data_type" placeholder="Data Type" value={form.data_type} onChange={handleChange} required />
-        <Input name="purpose" placeholder="Purpose" value={form.purpose} onChange={handleChange} required />
-
-        <button className="bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700">
-          Request Access
-        </button>
-      </form>
-
-      {result && (
-        <p
-          className={`font-semibold ${
-            result.allowed ? "text-green-600" : "text-red-600"
-          }`}
-        >
-          {result.allowed ? "Access Granted" : "Access Denied"}
-        </p>
-      )}
+      <p className="text-gray-600">
+        Access decisions are validated against on-chain consent state.
+      </p>
     </section>
   );
 }
 
 /* ================= AUDIT PAGE ================= */
 
-function AuditPage() {
-  const [userId, setUserId] = useState("");
-  const [consents, setConsents] = useState([]);
-  const [logs, setLogs] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  const loadAudit = async () => {
-    if (!userId) return;
-
-    setLoading(true);
-
-    const consentsRes = await fetch(`http://localhost:4000/consents/${userId}`);
-    const logsRes = await fetch(`http://localhost:4000/logs/${userId}`);
-
-    const consentsData = await consentsRes.json();
-    const logsData = await logsRes.json();
-
-    setConsents(consentsData.consents || []);
-    setLogs(logsData.logs || []);
-    setLoading(false);
+function AuditPage({ callContract }) {
+  const anchorAudit = async () => {
+    await callContract("anchor_audit_hash", ["audit_hash_demo"]);
+    alert("Audit hash anchored on-chain");
   };
 
-  const revokeConsent = async (consentId) => {
-    await fetch("http://localhost:4000/consent/revoke", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ consent_id: consentId })
-    });
-    loadAudit();
+  const revoke = async () => {
+    await callContract("revoke_consent");
+    alert("Consent revoked on-chain");
   };
-
-  /* ===== CHART DATA ===== */
-  const allowedCount = logs.filter(l => l.result === "allowed").length;
-  const deniedCount = logs.filter(l => l.result === "denied").length;
-
-  const chartData = [
-    { name: "Allowed", value: allowedCount },
-    { name: "Denied", value: deniedCount }
-  ];
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-4">
       <h2 className="text-xl font-semibold text-indigo-700">
-        Transparency & Audit Dashboard
+        Audit Controls
       </h2>
 
-      <div className="flex gap-2">
-        <Input
-          placeholder="User ID"
-          value={userId}
-          onChange={(e) => setUserId(e.target.value)}
-        />
-        <button
-          onClick={loadAudit}
-          className="bg-indigo-600 text-white px-4 rounded-lg"
-        >
-          Load
-        </button>
-      </div>
+      <button
+        onClick={anchorAudit}
+        className="bg-indigo-600 text-white px-4 py-2 rounded-lg"
+      >
+        Anchor Audit Hash
+      </button>
 
-      {loading && <p>Loading...</p>}
-
-      {/* ===== CHART ===== */}
-      <div className="bg-indigo-50 p-4 rounded-lg border">
-        <h3 className="font-semibold mb-2">Access Summary</h3>
-        <ResponsiveContainer width="100%" height={220}>
-          <BarChart data={chartData}>
-            <XAxis dataKey="name" />
-            <YAxis allowDecimals={false} />
-            <Tooltip />
-            <Bar dataKey="value" fill="#4f46e5" />
-          </BarChart>
-        </ResponsiveContainer>
-        <p className="text-sm text-gray-600 mt-2">
-          Allowed vs Denied access attempts
-        </p>
-      </div>
-
-      {/* ===== CONSENTS TABLE ===== */}
-      <div>
-        <h3 className="font-semibold mb-2">Consents</h3>
-        <table className="w-full border text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="border p-2">App</th>
-              <th className="border p-2">Data</th>
-              <th className="border p-2">Purpose</th>
-              <th className="border p-2">Status</th>
-              <th className="border p-2">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {consents.map(c => (
-              <tr key={c.id}>
-                <td className="border p-2">{c.app_id}</td>
-                <td className="border p-2">{c.data_type}</td>
-                <td className="border p-2">{c.purpose}</td>
-                <td className="border p-2">{c.status}</td>
-                <td className="border p-2">
-                  {c.status === "active" ? (
-                    <button
-                      onClick={() => revokeConsent(c.id)}
-                      className="text-red-600 hover:underline"
-                    >
-                      Revoke
-                    </button>
-                  ) : "—"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* ===== LOGS TABLE ===== */}
-      <div>
-        <h3 className="font-semibold mb-2">Access Logs</h3>
-        <table className="w-full border text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="border p-2">App</th>
-              <th className="border p-2">Data</th>
-              <th className="border p-2">Purpose</th>
-              <th className="border p-2">Result</th>
-              <th className="border p-2">Time (IST)</th>
-              <th className="border p-2">Hash</th>
-            </tr>
-          </thead>
-          <tbody>
-            {logs.map(l => (
-              <tr key={l.id}>
-                <td className="border p-2">{l.app_id}</td>
-                <td className="border p-2">{l.data_type}</td>
-                <td className="border p-2">{l.purpose}</td>
-                <td className={`border p-2 font-semibold ${l.result === "allowed" ? "text-green-600" : "text-red-600"}`}>
-                  {l.result}
-                </td>
-                <td className="border p-2">
-                  {new Date(l.created_at).toLocaleString("en-IN", {
-                    timeZone: "Asia/Kolkata"
-                  })}{" "}
-                  (UTC)
-                </td>
-                <td className="border p-2 text-xs break-all text-gray-600">
-                  {l.log_hash?.slice(0, 14)}…
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <button
+        onClick={revoke}
+        className="bg-red-600 text-white px-4 py-2 rounded-lg"
+      >
+        Revoke Consent
+      </button>
     </section>
   );
 }

@@ -19,7 +19,7 @@ from algosdk.v2client.models import SimulateTraceConfig
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
 
-_APP_SPEC_JSON = r"""{"arcs": [22, 28], "bareActions": {"call": [], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello", "returns": {"type": "string"}, "events": [], "readonly": false, "recommendations": {}}], "name": "AlgoConsent", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}, "byteCode": {"approval": "CzEbQQAYgAQCvs4RNhoAjgEAAQAxGRQxGBBEQgAIMRkUMRgUEEM2GgFJgQBZgQIISwEVEkRXAgCAB0hlbGxvLCBMUEkVFlcGAkxQgAQVH3x1TFCwgQFD", "clear": "C4EBQw=="}, "events": [], "networks": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuYXBwcm92YWxfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9hbGdvY29uc2VudC9jb250cmFjdC5weTo1CiAgICAvLyBjbGFzcyBBbGdvQ29uc2VudChBUkM0Q29udHJhY3QpOgogICAgdHhuIE51bUFwcEFyZ3MKICAgIGJ6IG1haW5fX19hbGdvcHlfZGVmYXVsdF9jcmVhdGVANQogICAgcHVzaGJ5dGVzIDB4MDJiZWNlMTEgLy8gbWV0aG9kICJoZWxsbyhzdHJpbmcpc3RyaW5nIgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAogICAgbWF0Y2ggbWFpbl9oZWxsb19yb3V0ZUAzCiAgICBlcnIKCm1haW5faGVsbG9fcm91dGVAMzoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9hbGdvY29uc2VudC9jb250cmFjdC5weTo3CiAgICAvLyBAYWJpbWV0aG9kKCkKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICAmJgogICAgYXNzZXJ0CiAgICBiIGhlbGxvCgptYWluX19fYWxnb3B5X2RlZmF1bHRfY3JlYXRlQDU6CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgIQogICAgJiYKICAgIHJldHVybgoKCi8vIHNtYXJ0X2NvbnRyYWN0cy5hbGdvY29uc2VudC5jb250cmFjdC5BbGdvQ29uc2VudC5oZWxsb1tyb3V0aW5nXSgpIC0+IHZvaWQ6CmhlbGxvOgogICAgLy8gc21hcnRfY29udHJhY3RzL2FsZ29jb25zZW50L2NvbnRyYWN0LnB5OjcKICAgIC8vIEBhYmltZXRob2QoKQogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQogICAgZHVwCiAgICBwdXNoaW50IDAKICAgIGV4dHJhY3RfdWludDE2IC8vIG9uIGVycm9yOiBpbnZhbGlkIGFycmF5IGxlbmd0aCBoZWFkZXIKICAgIHB1c2hpbnQgMgogICAgKwogICAgZGlnIDEKICAgIGxlbgogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIG51bWJlciBvZiBieXRlcyBmb3IgYXJjNC5keW5hbWljX2FycmF5PGFyYzQudWludDg+CiAgICBleHRyYWN0IDIgMAogICAgLy8gc21hcnRfY29udHJhY3RzL2FsZ29jb25zZW50L2NvbnRyYWN0LnB5OjkKICAgIC8vIHJldHVybiAiSGVsbG8sICIgKyBuYW1lCiAgICBwdXNoYnl0ZXMgIkhlbGxvLCAiCiAgICBzd2FwCiAgICBjb25jYXQKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9hbGdvY29uc2VudC9jb250cmFjdC5weTo3CiAgICAvLyBAYWJpbWV0aG9kKCkKICAgIGR1cAogICAgbGVuCiAgICBpdG9iCiAgICBleHRyYWN0IDYgMgogICAgc3dhcAogICAgY29uY2F0CiAgICBwdXNoYnl0ZXMgMHgxNTFmN2M3NQogICAgc3dhcAogICAgY29uY2F0CiAgICBsb2cKICAgIHB1c2hpbnQgMQogICAgcmV0dXJuCg==", "clear": "I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMQogICAgcmV0dXJuCg=="}, "sourceInfo": {"approval": {"pcOffsetMethod": "none", "sourceInfo": [{"pc": [44], "errorMessage": "invalid array length header"}, {"pc": [52], "errorMessage": "invalid number of bytes for arc4.dynamic_array<arc4.uint8>"}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}, "templateVariables": {}}"""
+_APP_SPEC_JSON = r"""{"arcs": [22, 28], "bareActions": {"call": [], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "consent_hash"}], "name": "create_consent", "returns": {"type": "string"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "revoke_consent", "returns": {"type": "string"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "audit_hash"}], "name": "anchor_audit_hash", "returns": {"type": "string"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "get_consent_status", "returns": {"type": "uint64"}, "events": [], "readonly": false, "recommendations": {}}], "name": "AlgoConsent", "state": {"keys": {"box": {}, "global": {"consent_hash": {"key": "Y29uc2VudF9oYXNo", "keyType": "AVMString", "valueType": "AVMString"}, "consent_active": {"key": "Y29uc2VudF9hY3RpdmU=", "keyType": "AVMString", "valueType": "AVMUint64"}, "audit_anchor": {"key": "YXVkaXRfYW5jaG9y", "keyType": "AVMString", "valueType": "AVMString"}}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 2, "ints": 1}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}, "byteCode": {"approval": "CyADAQACJgEOY29uc2VudF9hY3RpdmUxG0EAKzEZFEQxGESCBASfsEoSBGS5X30EQbUQiQT6Vo4wNhoAjgQACQBGAGMAoQAxGRQxGBQQQzYaAUkjWSQISwEVEkRXAgCADGNvbnNlbnRfaGFzaExnKCJngBUVH3x1AA9Db25zZW50IGNyZWF0ZWSwIkMoI2eAFRUffHUAD0NvbnNlbnQgcmV2b2tlZLAiQzYaAUkjWSQISwEVEkRXAgCADGF1ZGl0X2FuY2hvckxngBkVH3x1ABNBdWRpdCBoYXNoIGFuY2hvcmVksCJDIyhlRBaABBUffHVMULAiQw==", "clear": "C4EBQw=="}, "events": [], "networks": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuYXBwcm92YWxfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIGludGNibG9jayAxIDAgMgogICAgYnl0ZWNibG9jayAiY29uc2VudF9hY3RpdmUiCiAgICAvLyBzbWFydF9jb250cmFjdHMvYWxnb2NvbnNlbnQvY29udHJhY3QucHk6NQogICAgLy8gY2xhc3MgQWxnb0NvbnNlbnQoQVJDNENvbnRyYWN0KToKICAgIHR4biBOdW1BcHBBcmdzCiAgICBieiBtYWluX19fYWxnb3B5X2RlZmF1bHRfY3JlYXRlQDExCiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICBhc3NlcnQKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQKICAgIHB1c2hieXRlc3MgMHg5ZmIwNGExMiAweDY0Yjk1ZjdkIDB4NDFiNTEwODkgMHhmYTU2OGUzMCAvLyBtZXRob2QgImNyZWF0ZV9jb25zZW50KHN0cmluZylzdHJpbmciLCBtZXRob2QgInJldm9rZV9jb25zZW50KClzdHJpbmciLCBtZXRob2QgImFuY2hvcl9hdWRpdF9oYXNoKHN0cmluZylzdHJpbmciLCBtZXRob2QgImdldF9jb25zZW50X3N0YXR1cygpdWludDY0IgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAogICAgbWF0Y2ggY3JlYXRlX2NvbnNlbnQgcmV2b2tlX2NvbnNlbnQgYW5jaG9yX2F1ZGl0X2hhc2ggZ2V0X2NvbnNlbnRfc3RhdHVzCiAgICBlcnIKCm1haW5fX19hbGdvcHlfZGVmYXVsdF9jcmVhdGVAMTE6CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgIQogICAgJiYKICAgIHJldHVybgoKCi8vIHNtYXJ0X2NvbnRyYWN0cy5hbGdvY29uc2VudC5jb250cmFjdC5BbGdvQ29uc2VudC5jcmVhdGVfY29uc2VudFtyb3V0aW5nXSgpIC0+IHZvaWQ6CmNyZWF0ZV9jb25zZW50OgogICAgLy8gc21hcnRfY29udHJhY3RzL2FsZ29jb25zZW50L2NvbnRyYWN0LnB5OjExCiAgICAvLyBAYWJpbWV0aG9kKCkKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDEKICAgIGR1cAogICAgaW50Y18xIC8vIDAKICAgIGV4dHJhY3RfdWludDE2IC8vIG9uIGVycm9yOiBpbnZhbGlkIGFycmF5IGxlbmd0aCBoZWFkZXIKICAgIGludGNfMiAvLyAyCiAgICArCiAgICBkaWcgMQogICAgbGVuCiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBhcmM0LmR5bmFtaWNfYXJyYXk8YXJjNC51aW50OD4KICAgIGV4dHJhY3QgMiAwCiAgICAvLyBzbWFydF9jb250cmFjdHMvYWxnb2NvbnNlbnQvY29udHJhY3QucHk6MTMKICAgIC8vIHNlbGYuY29uc2VudF9oYXNoID0gY29uc2VudF9oYXNoCiAgICBwdXNoYnl0ZXMgImNvbnNlbnRfaGFzaCIKICAgIHN3YXAKICAgIGFwcF9nbG9iYWxfcHV0CiAgICAvLyBzbWFydF9jb250cmFjdHMvYWxnb2NvbnNlbnQvY29udHJhY3QucHk6MTQKICAgIC8vIHNlbGYuY29uc2VudF9hY3RpdmUgPSBVSW50NjQoMSkKICAgIGJ5dGVjXzAgLy8gImNvbnNlbnRfYWN0aXZlIgogICAgaW50Y18wIC8vIDEKICAgIGFwcF9nbG9iYWxfcHV0CiAgICAvLyBzbWFydF9jb250cmFjdHMvYWxnb2NvbnNlbnQvY29udHJhY3QucHk6MTEKICAgIC8vIEBhYmltZXRob2QoKQogICAgcHVzaGJ5dGVzIDB4MTUxZjdjNzUwMDBmNDM2ZjZlNzM2NTZlNzQyMDYzNzI2NTYxNzQ2NTY0CiAgICBsb2cKICAgIGludGNfMCAvLyAxCiAgICByZXR1cm4KCgovLyBzbWFydF9jb250cmFjdHMuYWxnb2NvbnNlbnQuY29udHJhY3QuQWxnb0NvbnNlbnQucmV2b2tlX2NvbnNlbnRbcm91dGluZ10oKSAtPiB2b2lkOgpyZXZva2VfY29uc2VudDoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9hbGdvY29uc2VudC9jb250cmFjdC5weToxOQogICAgLy8gc2VsZi5jb25zZW50X2FjdGl2ZSA9IFVJbnQ2NCgwKQogICAgYnl0ZWNfMCAvLyAiY29uc2VudF9hY3RpdmUiCiAgICBpbnRjXzEgLy8gMAogICAgYXBwX2dsb2JhbF9wdXQKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9hbGdvY29uc2VudC9jb250cmFjdC5weToxNwogICAgLy8gQGFiaW1ldGhvZCgpCiAgICBwdXNoYnl0ZXMgMHgxNTFmN2M3NTAwMGY0MzZmNmU3MzY1NmU3NDIwNzI2NTc2NmY2YjY1NjQKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKCi8vIHNtYXJ0X2NvbnRyYWN0cy5hbGdvY29uc2VudC5jb250cmFjdC5BbGdvQ29uc2VudC5hbmNob3JfYXVkaXRfaGFzaFtyb3V0aW5nXSgpIC0+IHZvaWQ6CmFuY2hvcl9hdWRpdF9oYXNoOgogICAgLy8gc21hcnRfY29udHJhY3RzL2FsZ29jb25zZW50L2NvbnRyYWN0LnB5OjIyCiAgICAvLyBAYWJpbWV0aG9kKCkKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDEKICAgIGR1cAogICAgaW50Y18xIC8vIDAKICAgIGV4dHJhY3RfdWludDE2IC8vIG9uIGVycm9yOiBpbnZhbGlkIGFycmF5IGxlbmd0aCBoZWFkZXIKICAgIGludGNfMiAvLyAyCiAgICArCiAgICBkaWcgMQogICAgbGVuCiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBhcmM0LmR5bmFtaWNfYXJyYXk8YXJjNC51aW50OD4KICAgIGV4dHJhY3QgMiAwCiAgICAvLyBzbWFydF9jb250cmFjdHMvYWxnb2NvbnNlbnQvY29udHJhY3QucHk6MjQKICAgIC8vIHNlbGYuYXVkaXRfYW5jaG9yID0gYXVkaXRfaGFzaAogICAgcHVzaGJ5dGVzICJhdWRpdF9hbmNob3IiCiAgICBzd2FwCiAgICBhcHBfZ2xvYmFsX3B1dAogICAgLy8gc21hcnRfY29udHJhY3RzL2FsZ29jb25zZW50L2NvbnRyYWN0LnB5OjIyCiAgICAvLyBAYWJpbWV0aG9kKCkKICAgIHB1c2hieXRlcyAweDE1MWY3Yzc1MDAxMzQxNzU2NDY5NzQyMDY4NjE3MzY4MjA2MTZlNjM2ODZmNzI2NTY0CiAgICBsb2cKICAgIGludGNfMCAvLyAxCiAgICByZXR1cm4KCgovLyBzbWFydF9jb250cmFjdHMuYWxnb2NvbnNlbnQuY29udHJhY3QuQWxnb0NvbnNlbnQuZ2V0X2NvbnNlbnRfc3RhdHVzW3JvdXRpbmddKCkgLT4gdm9pZDoKZ2V0X2NvbnNlbnRfc3RhdHVzOgogICAgLy8gc21hcnRfY29udHJhY3RzL2FsZ29jb25zZW50L2NvbnRyYWN0LnB5OjI5CiAgICAvLyByZXR1cm4gc2VsZi5jb25zZW50X2FjdGl2ZQogICAgaW50Y18xIC8vIDAKICAgIGJ5dGVjXzAgLy8gImNvbnNlbnRfYWN0aXZlIgogICAgYXBwX2dsb2JhbF9nZXRfZXgKICAgIGFzc2VydCAvLyBjaGVjayBzZWxmLmNvbnNlbnRfYWN0aXZlIGV4aXN0cwogICAgLy8gc21hcnRfY29udHJhY3RzL2FsZ29jb25zZW50L2NvbnRyYWN0LnB5OjI3CiAgICAvLyBAYWJpbWV0aG9kKCkKICAgIGl0b2IKICAgIHB1c2hieXRlcyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgo=", "clear": "I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMQogICAgcmV0dXJuCg=="}, "sourceInfo": {"approval": {"pcOffsetMethod": "none", "sourceInfo": [{"pc": [234], "errorMessage": "check self.consent_active exists"}, {"pc": [84, 174], "errorMessage": "invalid array length header"}, {"pc": [91, 181], "errorMessage": "invalid number of bytes for arc4.dynamic_array<arc4.uint8>"}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}, "templateVariables": {}}"""
 APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
 
 def _parse_abi_args(args: object | None = None) -> list[object] | None:
@@ -65,30 +65,74 @@ def _init_dataclass(cls: type, data: dict) -> object:
     return cls(**field_values)
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class HelloArgs:
-    """Dataclass for hello arguments"""
-    name: str
+class CreateConsentArgs:
+    """Dataclass for create_consent arguments"""
+    consent_hash: str
 
     @property
     def abi_method_signature(self) -> str:
-        return "hello(string)string"
+        return "create_consent(string)string"
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class AnchorAuditHashArgs:
+    """Dataclass for anchor_audit_hash arguments"""
+    audit_hash: str
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "anchor_audit_hash(string)string"
 
 
 class AlgoConsentParams:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
-    def hello(
+    def create_consent(
         self,
-        args: tuple[str] | HelloArgs,
+        args: tuple[str] | CreateConsentArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
-            "method": "hello(string)string",
+            "method": "create_consent(string)string",
             "args": method_args,
+        }))
+
+    def revoke_consent(
+        self,
+        params: algokit_utils.CommonAppCallParams | None = None
+    ) -> algokit_utils.AppCallMethodCallParams:
+    
+        params = params or algokit_utils.CommonAppCallParams()
+        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
+            "method": "revoke_consent()string",
+        }))
+
+    def anchor_audit_hash(
+        self,
+        args: tuple[str] | AnchorAuditHashArgs,
+        params: algokit_utils.CommonAppCallParams | None = None
+    ) -> algokit_utils.AppCallMethodCallParams:
+        method_args = _parse_abi_args(args)
+        params = params or algokit_utils.CommonAppCallParams()
+        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
+            "method": "anchor_audit_hash(string)string",
+            "args": method_args,
+        }))
+
+    def get_consent_status(
+        self,
+        params: algokit_utils.CommonAppCallParams | None = None
+    ) -> algokit_utils.AppCallMethodCallParams:
+    
+        params = params or algokit_utils.CommonAppCallParams()
+        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
+            "method": "get_consent_status()uint64",
         }))
 
     def clear_state(
@@ -106,17 +150,52 @@ class AlgoConsentCreateTransactionParams:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
-    def hello(
+    def create_consent(
         self,
-        args: tuple[str] | HelloArgs,
+        args: tuple[str] | CreateConsentArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
-            "method": "hello(string)string",
+            "method": "create_consent(string)string",
             "args": method_args,
+        }))
+
+    def revoke_consent(
+        self,
+        params: algokit_utils.CommonAppCallParams | None = None
+    ) -> algokit_utils.BuiltTransactions:
+    
+        params = params or algokit_utils.CommonAppCallParams()
+        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
+            "method": "revoke_consent()string",
+        }))
+
+    def anchor_audit_hash(
+        self,
+        args: tuple[str] | AnchorAuditHashArgs,
+        params: algokit_utils.CommonAppCallParams | None = None
+    ) -> algokit_utils.BuiltTransactions:
+        method_args = _parse_abi_args(args)
+        params = params or algokit_utils.CommonAppCallParams()
+        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
+            "method": "anchor_audit_hash(string)string",
+            "args": method_args,
+        }))
+
+    def get_consent_status(
+        self,
+        params: algokit_utils.CommonAppCallParams | None = None
+    ) -> algokit_utils.BuiltTransactions:
+    
+        params = params or algokit_utils.CommonAppCallParams()
+        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
+            "method": "get_consent_status()uint64",
         }))
 
     def clear_state(
@@ -134,9 +213,9 @@ class AlgoConsentSend:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
-    def hello(
+    def create_consent(
         self,
-        args: tuple[str] | HelloArgs,
+        args: tuple[str] | CreateConsentArgs,
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
@@ -144,11 +223,55 @@ class AlgoConsentSend:
         params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
-            "method": "hello(string)string",
+            "method": "create_consent(string)string",
             "args": method_args,
         }), send_params=send_params)
         parsed_response = response
         return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
+
+    def revoke_consent(
+        self,
+        params: algokit_utils.CommonAppCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None
+    ) -> algokit_utils.SendAppTransactionResult[str]:
+    
+        params = params or algokit_utils.CommonAppCallParams()
+        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
+            "method": "revoke_consent()string",
+        }), send_params=send_params)
+        parsed_response = response
+        return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
+
+    def anchor_audit_hash(
+        self,
+        args: tuple[str] | AnchorAuditHashArgs,
+        params: algokit_utils.CommonAppCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None
+    ) -> algokit_utils.SendAppTransactionResult[str]:
+        method_args = _parse_abi_args(args)
+        params = params or algokit_utils.CommonAppCallParams()
+        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
+            "method": "anchor_audit_hash(string)string",
+            "args": method_args,
+        }), send_params=send_params)
+        parsed_response = response
+        return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
+
+    def get_consent_status(
+        self,
+        params: algokit_utils.CommonAppCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None
+    ) -> algokit_utils.SendAppTransactionResult[int]:
+    
+        params = params or algokit_utils.CommonAppCallParams()
+        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
+            "method": "get_consent_status()uint64",
+        }), send_params=send_params)
+        parsed_response = response
+        return typing.cast(algokit_utils.SendAppTransactionResult[int], parsed_response)
 
     def clear_state(
         self,
@@ -161,11 +284,71 @@ class AlgoConsentSend:
         )
 
 
+class GlobalStateValue(typing.TypedDict):
+    """Shape of global_state state key values"""
+    consent_hash: str
+    consent_active: int
+    audit_anchor: str
+
 class AlgoConsentState:
     """Methods to access state for the current AlgoConsent app"""
 
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
+
+    @property
+    def global_state(
+        self
+    ) -> "_GlobalState":
+            """Methods to access global_state for the current app"""
+            return _GlobalState(self.app_client)
+
+class _GlobalState:
+    def __init__(self, app_client: algokit_utils.AppClient):
+        self.app_client = app_client
+        
+        # Pre-generated mapping of value types to their struct classes
+        self._struct_classes: dict[str, typing.Type[typing.Any]] = {}
+
+    def get_all(self) -> GlobalStateValue:
+        """Get all current keyed values from global_state state"""
+        result = self.app_client.state.global_state.get_all()
+        if not result:
+            return typing.cast(GlobalStateValue, {})
+
+        converted = {}
+        for key, value in result.items():
+            key_info = self.app_client.app_spec.state.keys.global_state.get(key)
+            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
+            converted[key] = (
+                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
+                else value
+            )
+        return typing.cast(GlobalStateValue, converted)
+
+    @property
+    def consent_hash(self) -> str:
+        """Get the current value of the consent_hash key in global_state state"""
+        value = self.app_client.state.global_state.get_value("consent_hash")
+        if isinstance(value, dict) and "AVMString" in self._struct_classes:
+            return _init_dataclass(self._struct_classes["AVMString"], value)  # type: ignore
+        return typing.cast(str, value)
+
+    @property
+    def consent_active(self) -> int:
+        """Get the current value of the consent_active key in global_state state"""
+        value = self.app_client.state.global_state.get_value("consent_active")
+        if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
+            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
+        return typing.cast(int, value)
+
+    @property
+    def audit_anchor(self) -> str:
+        """Get the current value of the audit_anchor key in global_state state"""
+        value = self.app_client.state.global_state.get_value("audit_anchor")
+        if isinstance(value, dict) and "AVMString" in self._struct_classes:
+            return _init_dataclass(self._struct_classes["AVMString"], value)  # type: ignore
+        return typing.cast(str, value)
 
 class AlgoConsentClient:
     """Client for interacting with AlgoConsent smart contract"""
@@ -313,9 +496,27 @@ class AlgoConsentClient:
     @typing.overload
     def decode_return_value(
         self,
-        method: typing.Literal["hello(string)string"],
+        method: typing.Literal["create_consent(string)string"],
         return_value: algokit_utils.ABIReturn | None
     ) -> str | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["revoke_consent()string"],
+        return_value: algokit_utils.ABIReturn | None
+    ) -> str | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["anchor_audit_hash(string)string"],
+        return_value: algokit_utils.ABIReturn | None
+    ) -> str | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["get_consent_status()uint64"],
+        return_value: algokit_utils.ABIReturn | None
+    ) -> int | None: ...
     @typing.overload
     def decode_return_value(
         self,
@@ -327,7 +528,7 @@ class AlgoConsentClient:
         self,
         method: str,
         return_value: algokit_utils.ABIReturn | None
-    ) -> algokit_utils.ABIValue | algokit_utils.ABIStruct | None | str:
+    ) -> algokit_utils.ABIValue | algokit_utils.ABIStruct | None | int | str:
         """Decode ABI return value for the given method."""
         if return_value is None:
             return None
@@ -498,21 +699,79 @@ class AlgoConsentFactoryCreateParams:
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             compilation_params=compilation_params)
 
-    def hello(
+    def create_consent(
         self,
-        args: tuple[str] | HelloArgs,
+        args: tuple[str] | CreateConsentArgs,
         *,
         params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
-        """Creates a new instance using the hello(string)string ABI method"""
+        """Creates a new instance using the create_consent(string)string ABI method"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
                 **dataclasses.asdict(params),
-                "method": "hello(string)string",
+                "method": "create_consent(string)string",
                 "args": _parse_abi_args(args),
+                }
+            ),
+            compilation_params=compilation_params
+        )
+
+    def revoke_consent(
+        self,
+        *,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> algokit_utils.AppCreateMethodCallParams:
+        """Creates a new instance using the revoke_consent()string ABI method"""
+        params = params or algokit_utils.CommonAppCallCreateParams()
+        return self.app_factory.params.create(
+            algokit_utils.AppFactoryCreateMethodCallParams(
+                **{
+                **dataclasses.asdict(params),
+                "method": "revoke_consent()string",
+                "args": None,
+                }
+            ),
+            compilation_params=compilation_params
+        )
+
+    def anchor_audit_hash(
+        self,
+        args: tuple[str] | AnchorAuditHashArgs,
+        *,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> algokit_utils.AppCreateMethodCallParams:
+        """Creates a new instance using the anchor_audit_hash(string)string ABI method"""
+        params = params or algokit_utils.CommonAppCallCreateParams()
+        return self.app_factory.params.create(
+            algokit_utils.AppFactoryCreateMethodCallParams(
+                **{
+                **dataclasses.asdict(params),
+                "method": "anchor_audit_hash(string)string",
+                "args": _parse_abi_args(args),
+                }
+            ),
+            compilation_params=compilation_params
+        )
+
+    def get_consent_status(
+        self,
+        *,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> algokit_utils.AppCreateMethodCallParams:
+        """Creates a new instance using the get_consent_status()uint64 ABI method"""
+        params = params or algokit_utils.CommonAppCallCreateParams()
+        return self.app_factory.params.create(
+            algokit_utils.AppFactoryCreateMethodCallParams(
+                **{
+                **dataclasses.asdict(params),
+                "method": "get_consent_status()uint64",
+                "args": None,
                 }
             ),
             compilation_params=compilation_params
@@ -619,20 +878,72 @@ class AlgoConsentComposer:
         self._composer = client.algorand.new_group()
         self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], object] | None] = []
 
-    def hello(
+    def create_consent(
         self,
-        args: tuple[str] | HelloArgs,
+        args: tuple[str] | CreateConsentArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> "AlgoConsentComposer":
         self._composer.add_app_call_method_call(
-            self.client.params.hello(
+            self.client.params.create_consent(
                 args=args,
                 params=params,
             )
         )
         self._result_mappers.append(
             lambda v: self.client.decode_return_value(
-                "hello(string)string", v
+                "create_consent(string)string", v
+            )
+        )
+        return self
+
+    def revoke_consent(
+        self,
+        params: algokit_utils.CommonAppCallParams | None = None
+    ) -> "AlgoConsentComposer":
+        self._composer.add_app_call_method_call(
+            self.client.params.revoke_consent(
+                
+                params=params,
+            )
+        )
+        self._result_mappers.append(
+            lambda v: self.client.decode_return_value(
+                "revoke_consent()string", v
+            )
+        )
+        return self
+
+    def anchor_audit_hash(
+        self,
+        args: tuple[str] | AnchorAuditHashArgs,
+        params: algokit_utils.CommonAppCallParams | None = None
+    ) -> "AlgoConsentComposer":
+        self._composer.add_app_call_method_call(
+            self.client.params.anchor_audit_hash(
+                args=args,
+                params=params,
+            )
+        )
+        self._result_mappers.append(
+            lambda v: self.client.decode_return_value(
+                "anchor_audit_hash(string)string", v
+            )
+        )
+        return self
+
+    def get_consent_status(
+        self,
+        params: algokit_utils.CommonAppCallParams | None = None
+    ) -> "AlgoConsentComposer":
+        self._composer.add_app_call_method_call(
+            self.client.params.get_consent_status(
+                
+                params=params,
+            )
+        )
+        self._result_mappers.append(
+            lambda v: self.client.decode_return_value(
+                "get_consent_status()uint64", v
             )
         )
         return self
