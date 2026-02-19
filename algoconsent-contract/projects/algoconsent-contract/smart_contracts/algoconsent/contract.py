@@ -1,12 +1,12 @@
-from algopy import ARC4Contract, String, UInt64, Global
+from algopy import ARC4Contract, String, UInt64
 from algopy.arc4 import abimethod
 
 
 class AlgoConsent(ARC4Contract):
 
-    consent_hash: String
-    consent_active: UInt64
-    audit_anchor: String
+    consent_hash: String = String("")
+    consent_active: UInt64 = UInt64(0)
+    audit_anchor: String = String("")
 
     @abimethod()
     def create_consent(self, consent_hash: String) -> String:

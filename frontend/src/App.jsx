@@ -1,6 +1,8 @@
 import { useState } from "react";
 import algosdk from "algosdk";
 import { PeraWalletConnect } from "@perawallet/connect";
+import contract from "./AlgoConsent.json";
+
 import {
   BarChart,
   Bar,
@@ -13,7 +15,6 @@ import {
 /* ================= BLOCKCHAIN CONFIG ================= */
 
 const peraWallet = new PeraWalletConnect();
-
 const appId = 755774056;
 
 const algodClient = new algosdk.Algodv2(
@@ -31,31 +32,59 @@ function App() {
   const [wallet, setWallet] = useState(null);
 
   const connectWallet = async () => {
-    const accounts = await peraWallet.connect();
-    setWallet(accounts[0]);
-  };
+  try {
+    await peraWallet.disconnect(); // reset old session
+  } catch {}
+
+  const accounts = await peraWallet.connect();
+  setWallet(accounts[0]);
+};
+
 
   const callContract = async (method, args = []) => {
-    if (!wallet) return alert("Connect wallet first");
+  if (!wallet) return alert("Connect wallet first");
 
-    const suggestedParams = await algodClient.getTransactionParams().do();
+  const suggestedParams = await algodClient.getTransactionParams().do();
 
-    const txn = algosdk.makeApplicationNoOpTxnFromObject({
-      from: wallet,
-      appIndex: appId,
-      suggestedParams,
-      appArgs: [
-        encoder.encode(method),
-        ...args.map((a) => encoder.encode(a))
-      ],
-    });
+  const atc = new algosdk.AtomicTransactionComposer();
 
-    const signedTxn = await peraWallet.signTransaction([
-      { txn, signers: [wallet] },
-    ]);
+  const abiMethod = new algosdk.ABIMethod({
+    name: method,
+    args:
+      method === "revoke_consent"
+        ? []
+        : [{ type: "string", name: "value" }],
+    returns:
+      method === "get_consent_status"
+        ? { type: "uint64" }
+        : { type: "string" },
+  });
 
-    await algodClient.sendRawTransaction(signedTxn).do();
-  };
+  atc.addMethodCall({
+    appID: appId,
+    method: abiMethod,
+    methodArgs: args,
+    sender: wallet,
+    suggestedParams,
+    signer: async (txnGroup) => {
+      const signedTxns = await peraWallet.signTransaction([
+        {
+          txn: txnGroup[0].txn,
+          signers: [wallet],
+        },
+      ]);
+      return signedTxns;
+    },
+  });
+
+  await atc.execute(algodClient, 2);
+};
+
+
+
+
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
@@ -69,7 +98,7 @@ function App() {
 
         {wallet ? (
           <p className="text-green-600 text-sm mb-4">
-            Connected: {wallet.slice(0, 6)}...
+            Connected: {wallet}...
           </p>
         ) : (
           <button
@@ -149,31 +178,29 @@ function ConsentPage({ callContract }) {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:4000/consent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form)
-      });
+      // Simple demo hash from form data
+      const payload = JSON.stringify(form);
+      const hash = btoa(payload).slice(0, 32);
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Something went wrong");
-        return;
-      }
-
-      await callContract("create_consent", ["demo_hash"]);
+      await callContract("create_consent", [hash]);
 
       setMessage("Consent granted & anchored on-chain");
-    } catch {
-      setError("Backend not reachable");
+      setForm({
+        user_id: "",
+        app_id: "",
+        data_type: "",
+        purpose: "",
+        expires_at: ""
+      });
+    } catch (err) {
+      setError("Transaction failed");
     }
   };
 
   return (
     <section className="space-y-4">
       <h2 className="text-xl font-semibold text-indigo-700">
-        Grant User Consents
+        Grant User Consent
       </h2>
 
       <form onSubmit={submitConsent} className="grid gap-3">
@@ -184,7 +211,7 @@ function ConsentPage({ callContract }) {
         <Input type="date" name="expires_at" value={form.expires_at} onChange={handleChange} />
 
         <button className="bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700">
-          Grant Consents
+          Grant Consent
         </button>
       </form>
 
@@ -200,10 +227,10 @@ function AccessPage() {
   return (
     <section>
       <h2 className="text-xl font-semibold text-indigo-700">
-        App Access (Backend Controlled)
+        Access Controlled On-Chain
       </h2>
       <p className="text-gray-600">
-        Access decisions are validated against on-chain consent state.
+        Data access decisions are enforced by Algorand smart contract state.
       </p>
     </section>
   );
