@@ -4,26 +4,22 @@ from algopy.arc4 import abimethod
 
 class AlgoConsent(ARC4Contract):
 
-    consent_hash: String = String("")
-    consent_active: UInt64 = UInt64(0)
-    audit_anchor: String = String("")
+    consent_hash: String
+    consent_active: UInt64
+    audit_anchor: String
 
     @abimethod()
-    def create_consent(self, consent_hash: String) -> String:
+    def create(self, consent_hash: String) -> UInt64:
         self.consent_hash = consent_hash
         self.consent_active = UInt64(1)
-        return String("Consent created")
+        return UInt64(1)
 
     @abimethod()
-    def revoke_consent(self) -> String:
+    def revoke(self) -> UInt64:
         self.consent_active = UInt64(0)
-        return String("Consent revoked")
+        return UInt64(1)
 
     @abimethod()
-    def anchor_audit_hash(self, audit_hash: String) -> String:
+    def anchor(self, audit_hash: String) -> UInt64:
         self.audit_anchor = audit_hash
-        return String("Audit hash anchored")
-
-    @abimethod()
-    def get_consent_status(self) -> UInt64:
-        return self.consent_active
+        return UInt64(1)

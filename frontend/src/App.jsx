@@ -1,21 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import algosdk from "algosdk";
 import { PeraWalletConnect } from "@perawallet/connect";
-import contract from "./AlgoConsent.json";
 
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer
-} from "recharts";
-
-/* ================= BLOCKCHAIN CONFIG ================= */
+/* ================= CONFIG ================= */
 
 const peraWallet = new PeraWalletConnect();
-const appId = 755774056;
+const appId = 755774056; // <-- MAKE SURE THIS IS YOUR NEW DEPLOYED ID
 
 const algodClient = new algosdk.Algodv2(
   "",
@@ -25,119 +15,142 @@ const algodClient = new algosdk.Algodv2(
 
 const encoder = new TextEncoder();
 
-/* ================= APP ROOT ================= */
+/* ================= APP ================= */
 
 function App() {
-  const [page, setPage] = useState("consent");
   const [wallet, setWallet] = useState(null);
+  const [page, setPage] = useState("consent");
+  const [loading, setLoading] = useState(false);
 
+  /* ===== Restore session safely ===== */
+  useEffect(() => {
+    const restore = async () => {
+      const accounts = await peraWallet.reconnectSession();
+      if (accounts && accounts.length > 0) {
+        setWallet(accounts[0]);
+      }
+    };
+    restore();
+  }, []);
+
+  /* ===== Connect ===== */
   const connectWallet = async () => {
-  try {
-    await peraWallet.disconnect(); // reset old session
-  } catch {}
+    const accounts = await peraWallet.connect();
+    if (accounts.length > 0) {
+      setWallet(accounts[0]);
+    }
+  };
 
-  const accounts = await peraWallet.connect();
-  setWallet(accounts[0]);
-};
+  /* ===== Generic Contract Call ===== */
+  const callContract = async (action, value = null) => {
+    const currentWallet = wallet; // prevent stale state
 
+    if (!currentWallet) {
+      alert("Connect wallet first");
+      return;
+    }
 
-  const callContract = async (method, args = []) => {
-  if (!wallet) return alert("Connect wallet first");
+    setLoading(true);
 
-  const suggestedParams = await algodClient.getTransactionParams().do();
+    try {
+      console.log("Using wallet:", currentWallet);
 
-  const atc = new algosdk.AtomicTransactionComposer();
+      const params = await algodClient.getTransactionParams().do();
 
-  const abiMethod = new algosdk.ABIMethod({
-    name: method,
-    args:
-      method === "revoke_consent"
-        ? []
-        : [{ type: "string", name: "value" }],
-    returns:
-      method === "get_consent_status"
-        ? { type: "uint64" }
-        : { type: "string" },
-  });
+      const appArgs = [encoder.encode(action)];
+      if (value) {
+        appArgs.push(encoder.encode(value));
+      }
 
-  atc.addMethodCall({
-    appID: appId,
-    method: abiMethod,
-    methodArgs: args,
-    sender: wallet,
-    suggestedParams,
-    signer: async (txnGroup) => {
-      const signedTxns = await peraWallet.signTransaction([
+      const txn = algosdk.makeApplicationNoOpTxnFromObject({
+        from: currentWallet,
+        appIndex: appId,
+        appArgs,
+        suggestedParams: params,
+      });
+
+      const signed = await peraWallet.signTransaction([
         {
-          txn: txnGroup[0].txn,
-          signers: [wallet],
+          txn,
+          signers: [currentWallet],
         },
       ]);
-      return signedTxns;
-    },
-  });
 
-  await atc.execute(algodClient, 2);
-};
+      // 🔥 FIX: Handle Pera return format safely
+      const signedTxn =
+        signed[0] instanceof Uint8Array
+          ? signed[0]
+          : signed[0].blob;
 
+      const { txId } = await algodClient
+        .sendRawTransaction(signedTxn)
+        .do();
 
+      await algosdk.waitForConfirmation(algodClient, txId, 2);
 
+      alert("Transaction successful");
+    } catch (err) {
+      console.error("REAL ERROR:", err);
+      alert(err?.message || "Transaction failed");
+    }
 
-
-
+    setLoading(false);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
       <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-xl p-6">
-        <h1 className="text-3xl font-bold text-indigo-700 mb-1">
+
+        <h1 className="text-3xl font-bold text-indigo-700 mb-4">
           ConsentLedger
         </h1>
-        <p className="text-gray-600 mb-4">
-          Decentralized Consent & Data Usage Tracker
-        </p>
 
-        {wallet ? (
-          <p className="text-green-600 text-sm mb-4">
-            Connected: {wallet}...
-          </p>
-        ) : (
+        {!wallet ? (
           <button
             onClick={connectWallet}
             className="bg-indigo-600 text-white px-4 py-2 rounded-lg mb-4"
           >
             Connect Wallet
           </button>
+        ) : (
+          <p className="text-green-600 mb-4">
+            Connected: {wallet.slice(0, 10)}...
+          </p>
         )}
 
-        <div className="flex gap-3 mb-8">
+        {/* NAVIGATION */}
+        <div className="flex gap-3 mb-6">
           <NavButton active={page === "consent"} onClick={() => setPage("consent")}>
             Consent
-          </NavButton>
-          <NavButton active={page === "access"} onClick={() => setPage("access")}>
-            App Access
           </NavButton>
           <NavButton active={page === "audit"} onClick={() => setPage("audit")}>
             Audit
           </NavButton>
         </div>
 
-        {page === "consent" && <ConsentPage callContract={callContract} />}
-        {page === "access" && <AccessPage />}
-        {page === "audit" && <AuditPage callContract={callContract} />}
+        {page === "consent" && (
+          <ConsentPage callContract={callContract} />
+        )}
+
+        {page === "audit" && (
+          <AuditPage callContract={callContract} />
+        )}
+
+        {loading && <p>Processing transaction...</p>}
       </div>
     </div>
   );
 }
 
-/* ================= SHARED UI ================= */
+/* ================= UI ================= */
 
 function NavButton({ active, children, ...props }) {
   return (
     <button
       {...props}
-      className={`px-5 py-2 rounded-lg font-medium transition ${
+      className={`px-5 py-2 rounded-lg font-medium ${
         active
-          ? "bg-indigo-600 text-white shadow"
+          ? "bg-indigo-600 text-white"
           : "bg-gray-200 hover:bg-gray-300"
       }`}
     >
@@ -150,7 +163,7 @@ function Input(props) {
   return (
     <input
       {...props}
-      className="border rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400"
+      className="border rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-indigo-400"
     />
   );
 }
@@ -166,41 +179,30 @@ function ConsentPage({ callContract }) {
     expires_at: ""
   });
 
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
   const submitConsent = async (e) => {
     e.preventDefault();
-    setMessage("");
-    setError("");
 
-    try {
-      // Simple demo hash from form data
-      const payload = JSON.stringify(form);
-      const hash = btoa(payload).slice(0, 32);
+    const payload = JSON.stringify(form);
+    const hash = btoa(payload).slice(0, 32);
 
-      await callContract("create_consent", [hash]);
+    await callContract("create", hash);
 
-      setMessage("Consent granted & anchored on-chain");
-      setForm({
-        user_id: "",
-        app_id: "",
-        data_type: "",
-        purpose: "",
-        expires_at: ""
-      });
-    } catch (err) {
-      setError("Transaction failed");
-    }
+    setForm({
+      user_id: "",
+      app_id: "",
+      data_type: "",
+      purpose: "",
+      expires_at: ""
+    });
   };
 
   return (
     <section className="space-y-4">
       <h2 className="text-xl font-semibold text-indigo-700">
-        Grant User Consent
+        Grant Consent
       </h2>
 
       <form onSubmit={submitConsent} className="grid gap-3">
@@ -210,28 +212,10 @@ function ConsentPage({ callContract }) {
         <Input name="purpose" placeholder="Purpose" value={form.purpose} onChange={handleChange} required />
         <Input type="date" name="expires_at" value={form.expires_at} onChange={handleChange} />
 
-        <button className="bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700">
+        <button className="bg-indigo-600 text-white py-2 rounded-lg">
           Grant Consent
         </button>
       </form>
-
-      {message && <p className="text-green-600">{message}</p>}
-      {error && <p className="text-red-600">{error}</p>}
-    </section>
-  );
-}
-
-/* ================= ACCESS PAGE ================= */
-
-function AccessPage() {
-  return (
-    <section>
-      <h2 className="text-xl font-semibold text-indigo-700">
-        Access Controlled On-Chain
-      </h2>
-      <p className="text-gray-600">
-        Data access decisions are enforced by Algorand smart contract state.
-      </p>
     </section>
   );
 }
@@ -239,16 +223,6 @@ function AccessPage() {
 /* ================= AUDIT PAGE ================= */
 
 function AuditPage({ callContract }) {
-  const anchorAudit = async () => {
-    await callContract("anchor_audit_hash", ["audit_hash_demo"]);
-    alert("Audit hash anchored on-chain");
-  };
-
-  const revoke = async () => {
-    await callContract("revoke_consent");
-    alert("Consent revoked on-chain");
-  };
-
   return (
     <section className="space-y-4">
       <h2 className="text-xl font-semibold text-indigo-700">
@@ -256,14 +230,14 @@ function AuditPage({ callContract }) {
       </h2>
 
       <button
-        onClick={anchorAudit}
-        className="bg-indigo-600 text-white px-4 py-2 rounded-lg"
+        onClick={() => callContract("anchor", "audit_hash_demo")}
+        className="bg-purple-600 text-white px-4 py-2 rounded-lg"
       >
         Anchor Audit Hash
       </button>
 
       <button
-        onClick={revoke}
+        onClick={() => callContract("revoke")}
         className="bg-red-600 text-white px-4 py-2 rounded-lg"
       >
         Revoke Consent
