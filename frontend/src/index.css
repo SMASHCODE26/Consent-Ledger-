@@ -1,5 +1,14 @@
-/* @import "tailwindcss";
- */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+  @apply bg-zinc-950 text-zinc-100 antialiased;
+}
+
+.glass {
+  @apply bg-glass backdrop-blur-md border border-white/10 rounded-2xl;
+}
+.input {
+  @apply w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 outline-none;
+}
