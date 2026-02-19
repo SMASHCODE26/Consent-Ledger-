@@ -1,7 +1,6 @@
 import { useState } from "react";
 import algosdk from "algosdk";
-import PeraWalletConnect from "@perawallet/connect";
-import { Buffer } from "buffer";
+import { PeraWalletConnect } from "@perawallet/connect";
 import {
   BarChart,
   Bar,
@@ -22,6 +21,8 @@ const algodClient = new algosdk.Algodv2(
   "https://testnet-api.algonode.cloud",
   ""
 );
+
+const encoder = new TextEncoder();
 
 /* ================= APP ROOT ================= */
 
@@ -44,8 +45,8 @@ function App() {
       appIndex: appId,
       suggestedParams,
       appArgs: [
-        new Uint8Array(Buffer.from(method)),
-        ...args.map((a) => new Uint8Array(Buffer.from(a)))
+        encoder.encode(method),
+        ...args.map((a) => encoder.encode(a))
       ],
     });
 
