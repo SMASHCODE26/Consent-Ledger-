@@ -10,6 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@perawallet/connect": "^1.5.0",
+    "algosdk": "^3.5.2",
+    "buffer": "^6.0.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "recharts": "^3.6.0"
